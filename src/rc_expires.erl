@@ -21,7 +21,7 @@
 %% already expired are deleted from the keyspace. Specifically this is what
 %% rcouch does 10 times per second:
 %%
-%%  - Test 100 random keys from the set of keys with an associated expire.
+%%  - Test 100 keys from the view with an associated expire.
 %%  - Delete all the keys found expired.
 %%  - If more than 25 keys were expired, start again from step 1.
 %%
