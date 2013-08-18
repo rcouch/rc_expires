@@ -214,17 +214,28 @@ ensure_ddoc_exists(Db) ->
         {ok, Doc} ->
             {Props} = couch_doc:to_json_obj(Doc, []),
             {Views} = couch_util:get_value(<<"views">>, Props),
-            case couch_util:get_value(<<"expires">>, Views) of
+            Props1 = case couch_util:get_value(<<"expires">>, Views) of
                 ?EXPIRES_JS_DDOC ->
-                    ok;
+                    Props;
                 _ ->
                     Views1 = lists:keyreplace(<<"expires">>, 1, Views,
                                               {<<"expires">>,
                                                ?EXPIRES_JS_DDOC}),
-                    Props1 = lists:keyreplace(<<"views">>, 1, Props, Views1),
-                    NewDoc = couch_doc:from_json_obj({Props1}),
-                    {ok, _Rev} = couch_db:update_doc(Db, NewDoc, [])
-            end
+                    lists:keyreplace(<<"views">>, 1, Props, Views1)
+            end,
+            Props2 = case couch_util:get_value(<<"validate_doc_read">>,
+                                               Props1) of
+                ?EXPIRES_VALIDATE_READ_JS ->
+                    Props1;
+                _ ->
+                    lists:keyreplace(<<"validate_doc_read">>, 1, Props1,
+                                     {<<"validate_doc_read">>,
+                                      ?EXPIRES_VALIDATE_READ_JS})
+            end,
+
+            NewDoc = couch_doc:from_json_obj({Props2}),
+            {ok, _Rev} = couch_db:update_doc(Db, NewDoc, [])
+
     end,
     ok.
 
@@ -232,6 +243,7 @@ expires_design_doc() ->
     DocProps = [
             {<<"_id">>, ?DNAME},
             {<<"language">>,<<"javascript">>},
-            {<<"views">>, {[{<<"expires">>, ?EXPIRES_JS_DDOC}]}}
+            {<<"views">>, {[{<<"expires">>, ?EXPIRES_JS_DDOC}]}},
+            {<<"validate_doc_read">>, ?EXPIRES_VALIDATE_READ_JS}
     ],
     {ok, couch_doc:from_json_obj({DocProps})}.
