@@ -1,0 +1,12 @@
+{application, rc_expires,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { rc_expires_app, []}},
+  {env, []}
+ ]}.
