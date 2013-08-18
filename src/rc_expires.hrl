@@ -16,7 +16,7 @@
 -define(EXPIRES_VALIDATE_READ_JS, <<"
     function(doc, userCtx) {
         var now = Math.round(new Date()/1000);
-        if ((typeof doc.ttl !== 'undefined') && (typeof doc.timestamp !== 'undfined')) {
+        if ((typeof doc.ttl !== 'undefined') && (typeof doc.timestamp !== 'undefined')) {
             if (now > (doc.ttl + doc.timestamp)) {
                 throw({notfound: 'doc expired'});
             }
