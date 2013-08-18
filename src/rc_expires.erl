@@ -2,6 +2,29 @@
 %%%
 %%% This file is part of rc_expires released under the MIT license.
 %%% See the NOTICE for more information.
+%%%
+%% @doc
+%%
+%% How rc_expires expires key ?
+%%
+%% Active way:
+%% -----------
+%%
+%% Expired docs are not found using the validate_doc_read function of the
+%% _rc_expires design document installed for the database.
+%%
+%% Passive way:
+%% ------------
+%%
+%% Periodically rcouch test a few keys at in the expires view
+%% from the installed _rc_expires design document . All the keys that are
+%% already expired are deleted from the keyspace. Specifically this is what
+%% rcouch does 10 times per second:
+%%
+%%  - Test 100 random keys from the set of keys with an associated expire.
+%%  - Delete all the keys found expired.
+%%  - If more than 25 keys were expired, start again from step 1.
+%%
 
 -module(rc_expires).
 
@@ -18,7 +41,7 @@
 -spec clean_expired(DbName::binary()) -> ok.
 clean_expired(DbName) ->
     NbExpired = do_clean_expired(DbName),
-    if NbExpired >= 25 ->
+    if NbExpired > 25 ->
             clean_expired(DbName);
         true -> ok
     end.
