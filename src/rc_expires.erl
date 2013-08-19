@@ -31,11 +31,24 @@
 -export([clean_expired/1]).
 -export([open_doc/2]).
 -export([is_expired/2]).
+-export([view_changes_since/4]).
 
 -include("rc_expires.hrl").
 -include_lib("couch/include/couch_db.hrl").
 -include_lib("couch_mrview/include/couch_mrview.hrl").
 
+view_changes_since(DbName, Since, Callback, Acc0) ->
+    Args = #mrargs{start_key=Since},
+    DefaultTTL = couch_config:get("rcouch", "expiry_secs", 0),
+    {ok, Db} = open_db(DbName),
+
+    try couch_mrview:query_view(Db, ?DNAME, <<"expires">>, Args,
+                                fun changes_cb/2, {Callback, DefaultTTL, Acc0}) of
+        {ok, {_, _, Acc}} ->
+            {ok, Acc}
+    after
+        couch_db:close(Db)
+    end.
 
 %% @doc clean all docs expired in this database.
 -spec clean_expired(DbName::binary()) -> ok.
@@ -119,6 +132,22 @@ view_cb({row, Row}, {ToDelete, DefaultTTL}=Acc) ->
             {ok, {[DocId | ToDelete], DefaultTTL}}
     end;
 view_cb(_Other, Acc) ->
+    {ok, Acc}.
+
+changes_cb({row, Row}, {Callback, DefaultTTL, UserAcc0}=Acc) ->
+    Doc = couch_util:get_value(value, Row),
+    case is_expired1(Doc, DefaultTTL) of
+        true ->
+            {ok, Acc};
+        false ->
+            Timestamp = couch_util:get_value(key, Row),
+            {ok, UserAcc} = Callback({Timestamp, Doc}, UserAcc0),
+            {ok, {Callback, DefaultTTL, UserAcc}}
+    end;
+changes_cb(complete, {Callback, DefaultTTL, UserAcc0}) ->
+    {ok, UserAcc} = Callback(complete, UserAcc0),
+    {ok, {Callback, DefaultTTL, UserAcc}};
+changes_cb(_, Acc) ->
     {ok, Acc}.
 
 
