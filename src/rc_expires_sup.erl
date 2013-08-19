@@ -24,5 +24,6 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, []} }.
-
+    TimersSup = ?CHILD(rc_expires_timers_sup, supervisor),
+    Watcher = ?CHILD(rc_expires_watcher, worker),
+    {ok, { {one_for_one, 5, 10}, [TimersSup, Watcher]} }.

@@ -19,7 +19,7 @@
 %% Periodically rcouch test a few keys at in the expires view
 %% from the installed _rc_expires design document . All the keys that are
 %% already expired are deleted from the keyspace. Specifically this is what
-%% rcouch does 10 times per second:
+%% rcouch does 1 times per second:
 %%
 %%  - Test 100 keys from the view with an associated expire.
 %%  - Delete all the keys found expired.
@@ -173,7 +173,8 @@ delete_doc(DbName, DocId) ->
     delete_doc(DbName, DocId, true).
 
 delete_doc(DbName, DocId, ShouldMutate) ->
-    {ok, Db} = couch_db:open(DbName, []),
+    Options = [{user_ctx, #user_ctx{roles=[<<"_admin">>]}}],
+    {ok, Db} = couch_db:open_int(DbName, Options),
     {ok, Revs} = couch_db:open_doc_revs(Db, DocId, all, []),
     try [Doc#doc{deleted=true} || {ok, #doc{deleted=false}=Doc} <- Revs] of
         [] ->
