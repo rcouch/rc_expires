@@ -1,7 +1,7 @@
 {application, rc_expires,
  [
-  {description, ""},
-  {vsn, "1"},
+  {description, "manage doc expiration in rcouch"},
+  {vsn, "1.0.0"},
   {registered, []},
   {applications, [
                   kernel,
