@@ -234,8 +234,13 @@ ensure_ddoc_exists(Db) ->
                                       ?EXPIRES_VALIDATE_READ_JS})
             end,
 
-            NewDoc = couch_doc:from_json_obj({Props2}),
-            {ok, _Rev} = couch_db:update_doc(Db, NewDoc, [])
+            %% update the document if needed
+            if Props =/= Props2 ->
+                    NewDoc = couch_doc:from_json_obj({Props2}),
+                    {ok, _Rev} = couch_db:update_doc(Db, NewDoc, []);
+                true ->
+                    ok
+            end
 
     end,
     ok.
