@@ -250,6 +250,10 @@ expires_design_doc() ->
             {<<"_id">>, ?DNAME},
             {<<"language">>,<<"javascript">>},
             {<<"views">>, {[{<<"expires">>, ?EXPIRES_JS_DDOC}]}},
-            {<<"validate_doc_read">>, ?EXPIRES_VALIDATE_READ_JS}
+            {<<"validate_doc_read">>, ?EXPIRES_VALIDATE_READ_JS},
+            {<<"options">>, {[
+                        {<<"seq_indexed">>, true},
+                        {<<"include_deleted">>, true}
+            ]}}
     ],
     {ok, couch_doc:from_json_obj({DocProps})}.
